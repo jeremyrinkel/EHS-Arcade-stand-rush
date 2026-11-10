@@ -1,0 +1,3 @@
+pygbag
+pygame-ce
+python-chess
