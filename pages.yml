@@ -1,0 +1,40 @@
+name: Build and deploy Pygame to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pygbag
+        run: python -m pip install 'pygbag>=0.9.2,<1.0'
+      - name: Build web version
+        run: python -m pygbag --build game
+      - name: Add browser fullscreen button
+        run: python inject_fullscreen.py
+      - name: Prepare Pages files
+        run: |
+          mkdir -p site
+          cp -a game/build/web/. site/
+          touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
